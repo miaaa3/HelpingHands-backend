@@ -43,6 +43,16 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void createDonationNotification(UserEntity donor, Donation donation) {
+        Notification notification = new Notification();
+        notification.setUser(donor);
+        notification.setMessage(" donated to your organization.");
+        notification.setNotificationType("DONATION");
+        notification.setRecipient(donation.getOrganization().getId());
+        notificationRepository.save(notification);
+    }
+
+    @Override
     public void createCommentNotification(UserEntity user, Comment comment) {
         if (!user.getId().equals(comment.getPost().getUser().getId())) {
             Notification notification = new Notification();

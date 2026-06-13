@@ -1,5 +1,6 @@
 package com.example.HelpingHands.ServiceImpl;
 
+import com.example.HelpingHands.DTO.VolunteerUpdateRequest;
 import com.example.HelpingHands.Entity.Organization;
 import com.example.HelpingHands.Entity.UserEntity;
 import com.example.HelpingHands.Entity.Volunteer;
@@ -12,8 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,11 +53,39 @@ public class UserServiceImpl implements UserService {
     }
 
     public List<UserEntity> searchUsers(String keyword, String authenticatedUsername) {
-        List<UserEntity> users = userRepository.findByNameContaining(keyword);
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<UserEntity> users = userRepository.findTop15ByNameContainingIgnoreCaseOrderByName(keyword.trim());
         users = users.stream()
                 .filter(user -> !user.getName().equals(authenticatedUsername))
                 .collect(Collectors.toList());
         return users;
+    }
+
+    @Override
+    public Volunteer updateVolunteer(String email, VolunteerUpdateRequest request) {
+        Volunteer volunteer = volunteerRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Volunteer not found"));
+
+        if (StringUtils.hasText(request.getFullName())) {
+            volunteer.setFullName(request.getFullName());
+        }
+        if (StringUtils.hasText(request.getPhone())) {
+            volunteer.setPhone(request.getPhone());
+        }
+        if (StringUtils.hasText(request.getAddress())) {
+            volunteer.setAddress(request.getAddress());
+        }
+        if (StringUtils.hasText(request.getProfile())) {
+            volunteer.setProfile(request.getProfile());
+        }
+        if (request.getInterests() != null) {
+            volunteer.setInterests(request.getInterests());
+        }
+
+        return volunteerRepository.save(volunteer);
     }
 
 }

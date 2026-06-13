@@ -11,6 +11,7 @@ public interface NotificationService {
     void createCommentNotification(UserEntity user, Comment comment);
     void createLikeNotification(UserEntity user, Like like);
     void createFollowNotification(UserEntity user, Follow follow);
+    void createDonationNotification(UserEntity donor, Donation donation);
     void deleteNotificationByLikeId(Long notificationId);
     public Set<Notification> getAllNotificationsForUser(Long userId);
 }

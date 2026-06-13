@@ -3,8 +3,10 @@ package com.example.HelpingHands.Controller;
 import com.example.HelpingHands.DTO.NotificationDTO;
 import com.example.HelpingHands.DTO.SearchResultWithFollowStatusDTO;
 import com.example.HelpingHands.DTO.UserDTO;
+import com.example.HelpingHands.DTO.VolunteerUpdateRequest;
 import com.example.HelpingHands.Entity.Notification;
 import com.example.HelpingHands.Entity.UserEntity;
+import com.example.HelpingHands.Entity.Volunteer;
 import com.example.HelpingHands.Repository.NotificationRepository;
 import com.example.HelpingHands.Repository.UserRepository;
 import com.example.HelpingHands.Service.FollowService;
@@ -12,6 +14,8 @@ import com.example.HelpingHands.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +56,12 @@ public class UserController {
         userDTO.setNotifications(notificationDTOs);
 
         return ResponseEntity.ok(userDTO);
+    }
+
+    @PutMapping("/updateVolunteer")
+    public ResponseEntity<?> updateVolunteer(@RequestBody VolunteerUpdateRequest request, Principal principal) {
+        Volunteer updatedVolunteer = userService.updateVolunteer(principal.getName(), request);
+        return ResponseEntity.ok(updatedVolunteer);
     }
 
 

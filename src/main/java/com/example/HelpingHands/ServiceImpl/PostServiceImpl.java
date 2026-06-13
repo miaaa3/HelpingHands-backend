@@ -8,13 +8,13 @@ import com.example.HelpingHands.Repository.MediaPostRepository;
 import com.example.HelpingHands.Repository.PostRepository;
 import com.example.HelpingHands.Repository.UserRepository;
 import com.example.HelpingHands.Service.PostService;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,6 +27,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @RequiredArgsConstructor
+@Slf4j
 @Service
 public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
@@ -35,6 +36,15 @@ public class PostServiceImpl implements PostService {
 
     @Value("${upload.directory}")
     private String uploadDirectory;
+
+    @PostConstruct
+    private void initUploadDirectory() throws IOException {
+        Path path = Paths.get(uploadDirectory);
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+            log.info("Created upload directory at {}", path.toAbsolutePath());
+        }
+    }
 
     @Override
     public Post createPost(String content, Long userId) {

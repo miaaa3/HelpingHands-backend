@@ -14,7 +14,8 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity,Long> {
     Optional<UserEntity> findByEmail(String email);
-    List<UserEntity> findByNameContaining(String name);
+    // Capped + case-insensitive: keeps the search dropdown fast and avoids dumping the whole table on broad keywords.
+    List<UserEntity> findTop15ByNameContainingIgnoreCaseOrderByName(String name);
     Optional<UserEntity> findByName(String name);
     List<UserEntity> findByFollowing(UserEntity following);
     @Query("SELECT u " +
