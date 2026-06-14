@@ -2,6 +2,8 @@ package com.example.HelpingHands.Service;
 
 import com.example.HelpingHands.Entity.MediaPost;
 import com.example.HelpingHands.Entity.Post;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -18,5 +20,9 @@ public interface PostService {
     void deletePost(Long id);
      void deleteMediaPostsByPostId(Long postId);
 
-     List<Post> getPostsOfFollowedUsers(Long userId);
+     /** One page of posts from followed users, newest first. */
+     Page<Post> getPostsOfFollowedUsers(Long userId, Pageable pageable);
+
+     /** One page of posts by one user, newest first - for profile pages. */
+     Page<Post> getPostsByUserId(Long userId, Pageable pageable);
 }

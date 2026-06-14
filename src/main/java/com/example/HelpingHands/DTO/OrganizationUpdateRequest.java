@@ -2,19 +2,22 @@ package com.example.HelpingHands.DTO;
 
 import lombok.Data;
 
-import java.util.Set;
+import java.math.BigDecimal;
 
 /**
- * Editable profile fields for a volunteer. Deliberately excludes
+ * Editable profile fields for an organization. Deliberately excludes
  * email/password/role so a user can't escalate privileges or take
  * over another account via the settings form.
  */
 @Data
-public class VolunteerUpdateRequest {
-    private String fullName;
+public class OrganizationUpdateRequest {
     private String phone;
     private String address;
     private String profile;
     private String bio;
-    private Set<String> interests;
+    private String description;
+    private String website;
+    private String type;
+    private String founder;
+    private BigDecimal campaignGoal;
 }

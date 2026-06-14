@@ -1,19 +1,20 @@
 package com.example.HelpingHands.Controller;
 
-import com.example.HelpingHands.DTO.NotificationDTO;
+import com.example.HelpingHands.DTO.OrganizationUpdateRequest;
+import com.example.HelpingHands.DTO.PublicProfileDTO;
 import com.example.HelpingHands.DTO.SearchResultWithFollowStatusDTO;
 import com.example.HelpingHands.DTO.UserDTO;
 import com.example.HelpingHands.DTO.VolunteerUpdateRequest;
-import com.example.HelpingHands.Entity.Notification;
+import com.example.HelpingHands.Entity.Organization;
 import com.example.HelpingHands.Entity.UserEntity;
 import com.example.HelpingHands.Entity.Volunteer;
-import com.example.HelpingHands.Repository.NotificationRepository;
 import com.example.HelpingHands.Repository.UserRepository;
 import com.example.HelpingHands.Service.FollowService;
 import com.example.HelpingHands.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,9 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @RequestMapping("api/users")
 @RequiredArgsConstructor
@@ -33,7 +32,6 @@ public class UserController {
     private final UserService userService;
     private final FollowService followService;
     private final UserRepository userRepository;
-    private final NotificationRepository notificationRepository;
     @GetMapping("/getUser")
     public ResponseEntity<?> getUser(Principal principal) {
         UserEntity user = userService.findByEmail(principal.getName());
@@ -42,19 +40,6 @@ public class UserController {
         userDTO.setNumberOfFollowers(user.getFollowers().size() - 1);
         userDTO.setNumberOfFollowing(user.getFollowing().size() - 1);
 
-        Set<Notification> notifications = notificationRepository.findAllByRecipientOrderByCreatedAtDesc(user.getId());
-        Set<NotificationDTO> notificationDTOs = new HashSet<>();
-
-        for (Notification notification : notifications) {
-            NotificationDTO notificationDTO = new NotificationDTO();
-            notificationDTO.setNotification(notification);
-            notificationDTO.setUser(notification.getUser());
-
-            notificationDTOs.add(notificationDTO);
-        }
-
-        userDTO.setNotifications(notificationDTOs);
-
         return ResponseEntity.ok(userDTO);
     }
 
@@ -62,6 +47,12 @@ public class UserController {
     public ResponseEntity<?> updateVolunteer(@RequestBody VolunteerUpdateRequest request, Principal principal) {
         Volunteer updatedVolunteer = userService.updateVolunteer(principal.getName(), request);
         return ResponseEntity.ok(updatedVolunteer);
+    }
+
+    @PutMapping("/updateOrganization")
+    public ResponseEntity<?> updateOrganization(@RequestBody OrganizationUpdateRequest request, Principal principal) {
+        Organization updatedOrganization = userService.updateOrganization(principal.getName(), request);
+        return ResponseEntity.ok(updatedOrganization);
     }
 
 
@@ -81,6 +72,29 @@ public class UserController {
             resultsWithFollowStatus.add(resultDTO);
         }
         return ResponseEntity.ok(resultsWithFollowStatus);
+    }
+
+    @GetMapping("/suggestions")
+    public ResponseEntity<?> suggestions(Principal principal) {
+        UserEntity user = userService.findByEmail(principal.getName());
+        List<UserEntity> suggestions = userService.getSuggestedUsers(user.getId());
+        return ResponseEntity.ok(suggestions);
+    }
+
+    /** Public profile for any user - used by the "view profile" pages (own or someone else's). */
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id, Principal principal) {
+        UserEntity currentUser = userService.findByEmail(principal.getName());
+        UserEntity target = userService.getUser(id);
+
+        PublicProfileDTO profileDTO = new PublicProfileDTO();
+        profileDTO.setUser(target);
+        profileDTO.setNumberOfFollowers(userRepository.numberOfFollowers(target.getId()));
+        profileDTO.setNumberOfFollowing(userRepository.numberOfFollowing(target.getId()));
+        profileDTO.setOwnProfile(target.getId().equals(currentUser.getId()));
+        profileDTO.setFollowing(profileDTO.isOwnProfile() ? false : followService.isFollowing(currentUser, target));
+
+        return ResponseEntity.ok(profileDTO);
     }
 
 }

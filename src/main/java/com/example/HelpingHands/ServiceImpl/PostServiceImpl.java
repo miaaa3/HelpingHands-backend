@@ -1,6 +1,5 @@
 package com.example.HelpingHands.ServiceImpl;
 
-import com.example.HelpingHands.Entity.Follow;
 import com.example.HelpingHands.Entity.MediaPost;
 import com.example.HelpingHands.Entity.Post;
 import com.example.HelpingHands.Entity.UserEntity;
@@ -14,6 +13,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -146,13 +147,16 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> getPostsOfFollowedUsers(Long userId) {
-        Optional<UserEntity> user = userRepository.findById(userId);
-        if (user.isPresent()) {
-            Set<Follow> followers = user.get().getFollowers();
-            return postRepository.findPostsOfFollowedUser(userId);
+    public Page<Post> getPostsOfFollowedUsers(Long userId, Pageable pageable) {
+        if (userRepository.existsById(userId)) {
+            return postRepository.findPostsOfFollowedUser(userId, pageable);
         }
-        return Collections.emptyList();
+        return Page.empty(pageable);
+    }
+
+    @Override
+    public Page<Post> getPostsByUserId(Long userId, Pageable pageable) {
+        return postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
     }
 
 }

@@ -22,6 +22,7 @@ public class DonationResponse {
     private String donorName;
     private Long organizationId;
     private String organizationName;
+    private String transactionRef;
 
     public static DonationResponse fromEntity(Donation donation) {
         DonationResponse dto = new DonationResponse();
@@ -34,6 +35,7 @@ public class DonationResponse {
         dto.setCreatedAt(donation.getCreatedAt());
         dto.setOrganizationId(donation.getOrganization().getId());
         dto.setOrganizationName(donation.getOrganization().getName());
+        dto.setTransactionRef(donation.getStripePaymentIntentId());
 
         if (donation.getAnonymous()) {
             dto.setDonorId(null);

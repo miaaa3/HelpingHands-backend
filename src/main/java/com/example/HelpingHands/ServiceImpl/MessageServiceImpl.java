@@ -62,12 +62,26 @@ public class MessageServiceImpl implements MessageService {
         List<Message> messages = messageRepository.findConversation(user.getId(), otherUserId);
 
         // Mark incoming messages as read now that the user has opened the conversation
-        messageRepository.findBySenderIdAndReceiverIdAndIsReadFalse(otherUserId, user.getId())
-                .forEach(m -> m.setIsRead(true));
+        markIncomingAsRead(otherUserId, user.getId());
 
         return messages.stream()
                 .map(MessageResponse::fromEntity)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void markAsRead(String userEmail, Long otherUserId) {
+        UserEntity user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        markIncomingAsRead(otherUserId, user.getId());
+    }
+
+    /** Flips isRead to true for all unread messages sent by {@code senderId} to {@code receiverId}. */
+    private void markIncomingAsRead(Long senderId, Long receiverId) {
+        messageRepository.findBySenderIdAndReceiverIdAndIsReadFalse(senderId, receiverId)
+                .forEach(m -> m.setIsRead(true));
     }
 
     @Override

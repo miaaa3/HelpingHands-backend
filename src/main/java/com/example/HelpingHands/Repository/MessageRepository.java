@@ -24,4 +24,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     long countBySenderIdAndReceiverIdAndIsReadFalse(Long senderId, Long receiverId);
 
     List<Message> findBySenderIdAndReceiverIdAndIsReadFalse(Long senderId, Long receiverId);
+
+    /** Total unread messages across all conversations - for the volunteer/org dashboard. */
+    long countByReceiverIdAndIsReadFalse(Long receiverId);
 }

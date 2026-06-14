@@ -1,17 +1,23 @@
 package com.example.HelpingHands.Service;
 
 import com.example.HelpingHands.Entity.*;
-
-import java.util.List;
-import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 
 public interface NotificationService {
-    Notification markNotificationAsRead(Long notificationId);
+    /** Marks one notification as read - only if it belongs to {@code userId}. */
+    Notification markNotificationAsRead(Long notificationId, Long userId);
     void createCommentNotification(UserEntity user, Comment comment);
     void createLikeNotification(UserEntity user, Like like);
-    void createFollowNotification(UserEntity user, Follow follow);
+    void createFollowNotification(UserEntity follower, Follow follow);
     void createDonationNotification(UserEntity donor, Donation donation);
+    /** Notifies the organization that a volunteer applied to one of its opportunities. */
+    void createApplicationNotification(UserEntity volunteer, OpportunityApplication application);
+    /** Notifies the volunteer that their application was accepted or rejected. */
+    void createApplicationDecisionNotification(OpportunityApplication application);
     void deleteNotificationByLikeId(Long notificationId);
-    public Set<Notification> getAllNotificationsForUser(Long userId);
+    Page<Notification> getNotificationsForUser(Long userId, Pageable pageable);
+    long getUnreadCount(Long userId);
+    void markAllAsRead(Long userId);
 }

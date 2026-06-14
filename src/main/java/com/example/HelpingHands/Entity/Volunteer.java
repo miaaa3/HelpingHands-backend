@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.*;
-@EqualsAndHashCode(callSuper = true,exclude = "eventParticipation")
+@EqualsAndHashCode(callSuper = true,exclude = "applications")
 @NoArgsConstructor
 @DiscriminatorValue("volunteer")
 @Data
@@ -33,7 +33,7 @@ public class Volunteer extends UserEntity {
 
     @JsonIgnore
     @OneToMany(mappedBy = "volunteer")
-    private Set<EventParticipant> eventParticipation;
+    private Set<OpportunityApplication> applications;
 
     public Volunteer(String email, String password, String address,
                      String phone, String role,String name, String fullName,

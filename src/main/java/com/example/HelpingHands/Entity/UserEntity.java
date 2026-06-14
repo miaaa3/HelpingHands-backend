@@ -47,6 +47,13 @@ public class UserEntity implements UserDetails {
     private String role;
     private String profile="https://avatars.githubusercontent.com/u/67946056?v=4";
 
+    /** Account moderation flag. Disabled accounts can't authenticate. Managed by admins. */
+    @Column(nullable = false)
+    private boolean enabled = true;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
     @JsonManagedReference(value = "followers")
     @OneToMany(mappedBy = "follower")
     private Set<Follow> followers = new HashSet<>();
@@ -114,6 +121,6 @@ public class UserEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 }

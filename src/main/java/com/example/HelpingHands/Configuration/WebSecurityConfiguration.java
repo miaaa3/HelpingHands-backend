@@ -42,6 +42,7 @@ public class WebSecurityConfiguration {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/donations/webhook", "/api/donations/config").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/**").hasAnyAuthority("VOLUNTEER", "ORGANIZATION")
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)

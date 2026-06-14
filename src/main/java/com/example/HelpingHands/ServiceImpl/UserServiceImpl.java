@@ -1,5 +1,6 @@
 package com.example.HelpingHands.ServiceImpl;
 
+import com.example.HelpingHands.DTO.OrganizationUpdateRequest;
 import com.example.HelpingHands.DTO.VolunteerUpdateRequest;
 import com.example.HelpingHands.Entity.Organization;
 import com.example.HelpingHands.Entity.UserEntity;
@@ -65,6 +66,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public List<UserEntity> getSuggestedUsers(Long userId) {
+        return userRepository.findSuggestedUsers(userId);
+    }
+
+    @Override
     public Volunteer updateVolunteer(String email, VolunteerUpdateRequest request) {
         Volunteer volunteer = volunteerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Volunteer not found"));
@@ -81,11 +87,50 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.hasText(request.getProfile())) {
             volunteer.setProfile(request.getProfile());
         }
+        if (request.getBio() != null) {
+            volunteer.setBio(request.getBio());
+        }
         if (request.getInterests() != null) {
             volunteer.setInterests(request.getInterests());
         }
 
         return volunteerRepository.save(volunteer);
+    }
+
+    @Override
+    public Organization updateOrganization(String email, OrganizationUpdateRequest request) {
+        Organization organization = organizationRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+
+        if (StringUtils.hasText(request.getPhone())) {
+            organization.setPhone(request.getPhone());
+        }
+        if (StringUtils.hasText(request.getAddress())) {
+            organization.setAddress(request.getAddress());
+        }
+        if (StringUtils.hasText(request.getProfile())) {
+            organization.setProfile(request.getProfile());
+        }
+        if (request.getBio() != null) {
+            organization.setBio(request.getBio());
+        }
+        if (request.getDescription() != null) {
+            organization.setDescription(request.getDescription());
+        }
+        if (StringUtils.hasText(request.getWebsite())) {
+            organization.setWebsite(request.getWebsite());
+        }
+        if (StringUtils.hasText(request.getType())) {
+            organization.setType(request.getType());
+        }
+        if (StringUtils.hasText(request.getFounder())) {
+            organization.setFounder(request.getFounder());
+        }
+        if (request.getCampaignGoal() != null) {
+            organization.setCampaignGoal(request.getCampaignGoal());
+        }
+
+        return organizationRepository.save(organization);
     }
 
 }

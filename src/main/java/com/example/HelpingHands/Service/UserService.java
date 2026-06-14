@@ -1,5 +1,6 @@
 package com.example.HelpingHands.Service;
 
+import com.example.HelpingHands.DTO.OrganizationUpdateRequest;
 import com.example.HelpingHands.DTO.VolunteerUpdateRequest;
 import com.example.HelpingHands.Entity.Organization;
 import com.example.HelpingHands.Entity.UserEntity;
@@ -20,5 +21,9 @@ public interface UserService {
     UserEntity findByEmail(String email);
     List<UserEntity> searchUsers(String keyword, String authenticatedUsername);
 
+    List<UserEntity> getSuggestedUsers(Long userId);
+
     Volunteer updateVolunteer(String email, VolunteerUpdateRequest request);
+
+    Organization updateOrganization(String email, OrganizationUpdateRequest request);
 }

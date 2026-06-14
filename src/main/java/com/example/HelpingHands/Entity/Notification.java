@@ -22,7 +22,7 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false,length = 30)
+    @Column(nullable = false,length = 255)
     private String message;
 
     @Column(length=30)
@@ -35,6 +35,10 @@ public class Notification {
     @Column(nullable = false)
     private Boolean isRead=false;
 
+    /** Frontend route to deep-link to when this notification is clicked, e.g. "/dashboard" or "/user-profile/12". */
+    @Column(length = 100)
+    private String link;
+
     @JsonBackReference(value = "like-notification")
     @OneToOne
     @JoinColumn(name = "like_id",referencedColumnName = "id")
@@ -42,7 +46,7 @@ public class Notification {
 
     @JsonBackReference(value = "follow-notification")
     @OneToOne
-    @JoinColumn(name = "follow-id",referencedColumnName = "id")
+    @JoinColumn(name = "follow_id",referencedColumnName = "id")
     private Follow follow;
 
     @JsonBackReference(value = "comment-notification")

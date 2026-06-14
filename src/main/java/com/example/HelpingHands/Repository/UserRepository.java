@@ -30,4 +30,11 @@ public interface UserRepository extends JpaRepository<UserEntity,Long> {
     int numberOfFollowing(@Param("userId") Long userId);
 
     List<UserEntity> findByFollowers(UserEntity follower);
+
+    // "People you may know": users the current user isn't following yet (and isn't themselves),
+    // capped to keep the home sidebar lightweight.
+    @Query(value = "SELECT * FROM users u WHERE u.id <> :userId " +
+            "AND u.id NOT IN (SELECT following_id FROM follows WHERE follower_id = :userId) " +
+            "ORDER BY RAND() LIMIT 5", nativeQuery = true)
+    List<UserEntity> findSuggestedUsers(@Param("userId") Long userId);
 }

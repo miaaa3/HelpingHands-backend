@@ -14,6 +14,7 @@ import com.example.HelpingHands.Service.DonationService;
 import com.example.HelpingHands.Service.NotificationService;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.Charge;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
@@ -99,30 +100,50 @@ public class DonationServiceImpl implements DonationService {
             throw new IllegalArgumentException("Invalid Stripe webhook signature");
         }
 
-        if (!"payment_intent.succeeded".equals(event.getType())
-                && !"payment_intent.payment_failed".equals(event.getType())) {
-            return;
-        }
+        String paymentIntentId = switch (event.getType()) {
+            case "payment_intent.succeeded", "payment_intent.payment_failed", "payment_intent.canceled" -> {
+                PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
+                yield intent != null ? intent.getId() : null;
+            }
+            case "charge.refunded" -> {
+                Charge charge = (Charge) event.getDataObjectDeserializer().getObject().orElse(null);
+                yield charge != null ? charge.getPaymentIntent() : null;
+            }
+            default -> null;
+        };
 
-        PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
-        if (intent == null) {
+        if (paymentIntentId == null) {
+            if (!"payment_intent.succeeded".equals(event.getType())
+                    && !"payment_intent.payment_failed".equals(event.getType())
+                    && !"payment_intent.canceled".equals(event.getType())
+                    && !"charge.refunded".equals(event.getType())) {
+                return; // event type we don't care about
+            }
             log.warn("Stripe webhook {} had no deserializable payment intent", event.getId());
             return;
         }
 
-        Donation donation = donationRepository.findByStripePaymentIntentId(intent.getId()).orElse(null);
+        Donation donation = donationRepository.findByStripePaymentIntentId(paymentIntentId).orElse(null);
         if (donation == null) {
-            log.warn("Received Stripe webhook for unknown payment intent {}", intent.getId());
+            log.warn("Received Stripe webhook for unknown payment intent {}", paymentIntentId);
             return;
         }
 
-        if ("payment_intent.succeeded".equals(event.getType())) {
-            donation.setStatus(DonationStatus.SUCCEEDED);
-            donationRepository.save(donation);
-            notificationService.createDonationNotification(donation.getDonor(), donation);
-        } else {
-            donation.setStatus(DonationStatus.FAILED);
-            donationRepository.save(donation);
+        switch (event.getType()) {
+            case "payment_intent.succeeded" -> {
+                donation.setStatus(DonationStatus.SUCCEEDED);
+                donationRepository.save(donation);
+                notificationService.createDonationNotification(donation.getDonor(), donation);
+            }
+            case "payment_intent.payment_failed", "payment_intent.canceled" -> {
+                donation.setStatus(DonationStatus.FAILED);
+                donationRepository.save(donation);
+            }
+            case "charge.refunded" -> {
+                donation.setStatus(DonationStatus.REFUNDED);
+                donationRepository.save(donation);
+            }
+            default -> { /* unreachable */ }
         }
     }
 

@@ -6,11 +6,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.Set;
 
 
-@EqualsAndHashCode(callSuper = true,exclude = "events")
+@EqualsAndHashCode(callSuper = true,exclude = "opportunities")
 @DiscriminatorValue("organization")
 @Data
 @NoArgsConstructor
@@ -32,9 +33,18 @@ public class Organization extends UserEntity {
     @Column(name = "founded_at")
     private Date foundedAt;
 
+    /** Optional fundraising goal for this organization's donation progress bar. */
+    @Column(name = "campaign_goal", precision = 12, scale = 2)
+    private BigDecimal campaignGoal;
+
+    /** Moderation status; defaults to PENDING until an admin verifies the organization. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "verification_status", nullable = false, length = 20)
+    private OrganizationVerificationStatus verificationStatus = OrganizationVerificationStatus.PENDING;
+
     @JsonManagedReference(value = "organization")
     @OneToMany(mappedBy = "organization")
-    private Set<Event> events;
+    private Set<Opportunity> opportunities;
     public Organization(String email, String password, String address, String phone, String role,String name , String description, String type, String founder, Date foundedAt) {
         super(email, password, address, phone,role,name);
         this.description = description;

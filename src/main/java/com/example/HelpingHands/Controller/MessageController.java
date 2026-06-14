@@ -6,6 +6,7 @@ import com.example.HelpingHands.DTO.MessageResponse;
 import com.example.HelpingHands.Repository.UserRepository;
 import com.example.HelpingHands.Service.MessageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,16 @@ public class MessageController {
     @GetMapping("/conversation/{userId}")
     public List<MessageResponse> getConversation(@PathVariable Long userId, Principal principal) {
         return messageService.getConversation(principal.getName(), userId);
+    }
+
+    /**
+     * Marks messages from {@code userId} as read without reloading the full history.
+     * Called when a live message arrives while its conversation is already open.
+     */
+    @PutMapping("/conversation/{userId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long userId, Principal principal) {
+        messageService.markAsRead(principal.getName(), userId);
+        return ResponseEntity.noContent().build();
     }
 
     /**

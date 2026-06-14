@@ -11,6 +11,10 @@ import com.example.HelpingHands.Service.PostService;
 import com.example.HelpingHands.Service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,12 +60,16 @@ public class PostController {
     }
 
 
+    /** Feed of posts from followed users, newest first, paginated (default 10/page). */
     @GetMapping("/getAllPosts")
-    public ResponseEntity<?> getAllPosts( Principal principal) {
+    public ResponseEntity<?> getAllPosts(@RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "10") int size,
+                                          Principal principal) {
         UserEntity user = userService.findByEmail(principal.getName());
-        List<Post> posts = postService.getPostsOfFollowedUsers(user.getId());
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> postsPage = postService.getPostsOfFollowedUsers(user.getId(), pageable);
         List<PostsWithLikeStatusDTO> postsWithLikeStatusList = new ArrayList<>();
-        for (Post post : posts) {
+        for (Post post : postsPage.getContent()) {
             boolean isLiked = likeService.isPostLikedByUser(post.getId(), user.getId());
             PostsWithLikeStatusDTO postsDTO = new PostsWithLikeStatusDTO();
             postsDTO.setPost(post);
@@ -72,7 +80,33 @@ public class PostController {
             postsDTO.setComments(commentService.getCommentsByPostId(post.getId()));
             postsWithLikeStatusList.add(postsDTO);
         }
-        return ResponseEntity.ok(postsWithLikeStatusList);
+        Page<PostsWithLikeStatusDTO> result = new PageImpl<>(postsWithLikeStatusList, pageable, postsPage.getTotalElements());
+        return ResponseEntity.ok(result);
+    }
+
+    /** All posts by one user, newest first - for profile pages (own or someone else's), paginated (default 10/page). */
+    @GetMapping("/getPostsByUser")
+    public ResponseEntity<?> getPostsByUser(@RequestParam Long userId,
+                                             @RequestParam(defaultValue = "0") int page,
+                                             @RequestParam(defaultValue = "10") int size,
+                                             Principal principal) {
+        UserEntity currentUser = userService.findByEmail(principal.getName());
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> postsPage = postService.getPostsByUserId(userId, pageable);
+        List<PostsWithLikeStatusDTO> postsWithLikeStatusList = new ArrayList<>();
+        for (Post post : postsPage.getContent()) {
+            boolean isLiked = likeService.isPostLikedByUser(post.getId(), currentUser.getId());
+            PostsWithLikeStatusDTO postsDTO = new PostsWithLikeStatusDTO();
+            postsDTO.setPost(post);
+            postsDTO.setLiked(isLiked);
+            postsDTO.setUser(post.getUser());
+            postsDTO.setLikesNumber(postRepository.numberOfLikes(post.getId()));
+            postsDTO.setCommentsNumber(postRepository.numberOfComments(post.getId()));
+            postsDTO.setComments(commentService.getCommentsByPostId(post.getId()));
+            postsWithLikeStatusList.add(postsDTO);
+        }
+        Page<PostsWithLikeStatusDTO> result = new PageImpl<>(postsWithLikeStatusList, pageable, postsPage.getTotalElements());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/getMediaForPost")

@@ -43,7 +43,9 @@ public class FollowController {
             followDTO.setFollowed(false);
             return ResponseEntity.ok(followDTO);
         } else {
-            followDTO.setFollow(followService.createFollow(follower, following));
+            Follow created = followService.createFollow(follower, following);
+            notificationService.createFollowNotification(follower, created);
+            followDTO.setFollow(created);
             followDTO.setFollowed(true);
             return ResponseEntity.ok(followDTO);
         }
