@@ -1,12 +1,24 @@
 # HelpingHands Backend
 
-Spring Boot backend for the HelpingHands volunteering social network.
+Spring Boot backend for HelpingHands, a volunteering platform connecting volunteers and organizations through opportunities, applications, social posts, messaging, donations, notifications, and admin moderation.
 
-## Project Summary
+## Current Product Shape
 
-HelpingHands connects volunteers and organizations through a social platform. This backend provides authentication, user profiles, feed posts, media uploads, likes, comments, follows, notifications, real-time private messaging, and Stripe donation support.
+The backend supports the main platform workflows:
 
-The API is designed for the Angular frontend in the companion `HelpingHands` repository. Authentication uses JWT tokens, most `/api/**` endpoints require either `VOLUNTEER` or `ORGANIZATION` authority, uploaded media is exposed from `/uploads/**`, and chat uses STOMP over SockJS/WebSocket at `/ws`.
+- Volunteer, organization, and admin users
+- JWT authentication and role-based access
+- Profiles, search, follows, posts, media uploads, likes, and comments
+- Opportunities with categories, dates, locations, capacity, and statuses
+- Opportunity applications with pending, accepted, rejected, and cancelled states
+- Volunteer and organization dashboard data
+- Admin moderation, organization verification, and platform management endpoints
+- Notifications with unread counts, pagination, mark-read, and mark-all-read
+- Real-time private messages over STOMP/SockJS WebSocket
+- Stripe donation intents, webhook processing, donation history, organization totals, and mixed payment statuses
+- Rich local sample data for realistic UI testing
+
+The API is designed for the Angular frontend in the companion `HelpingHands` repository.
 
 ## Tech Stack
 
@@ -21,31 +33,12 @@ The API is designed for the Angular frontend in the companion `HelpingHands` rep
 - Lombok
 - Maven wrapper
 
-## Main Capabilities
-
-- Register volunteers and organizations
-- Authenticate users and issue JWT responses
-- Load the current user's profile, follower counts, following counts, and notifications
-- Search users with follow status
-- Update volunteer profile details
-- Create, list, update, and delete posts
-- Upload and serve post media files
-- Like and comment on posts
-- Follow and unfollow users
-- Create notifications for social interactions
-- Create Stripe donation intents
-- Process Stripe donation webhooks
-- List donations by organization or current donor
-- Track total raised for an organization
-- Send and receive real-time private chat messages
-- List conversation summaries and message history
-
 ## Project Structure
 
 ```text
 src/main/java/com/example/HelpingHands/
   AuthenticationRequestsAndResponses/  Auth request and response DTOs
-  Configuration/                       Security, CORS, WebSocket, Stripe, MVC config
+  Configuration/                       Security, CORS, WebSocket, Stripe, MVC, sample data
   Controller/                          REST and STOMP API entry points
   DTO/                                 API response/request DTOs
   Entity/                              JPA entities
@@ -71,8 +64,6 @@ Create a MySQL database:
 CREATE DATABASE HelpingHands;
 ```
 
-Configure environment variables as needed, or use the local defaults in `src/main/resources/application.properties`.
-
 Recommended local variables:
 
 ```bash
@@ -95,11 +86,53 @@ Run the backend:
 
 The API runs on `http://localhost:8080/` by default.
 
+## Sample Data
+
+Local sample data is enabled by default:
+
+```properties
+sample-data.enabled=${SAMPLE_DATA_ENABLED:true}
+```
+
+The seeder is idempotent and creates a realistic demo world with:
+
+- admin account
+- multiple volunteers and organizations
+- verified, pending, and rejected organizations
+- posts, comments, likes, follows
+- open, full, closed, and draft opportunities
+- pending, accepted, rejected, and cancelled applications
+- messages
+- donations with succeeded, pending, failed, and refunded statuses
+- notifications
+
+Demo password for seeded users:
+
+```text
+Password123!
+```
+
+Useful demo accounts:
+
+```text
+admin@helpinghands.test
+maya.volunteer@helpinghands.test
+theo.volunteer@helpinghands.test
+foodbridge.org@helpinghands.test
+greensteps.org@helpinghands.test
+```
+
+To disable seeding:
+
+```bash
+export SAMPLE_DATA_ENABLED=false
+```
+
 ## Default Local Ports
 
 - Backend API: `8080`
-- MySQL (MAMP default): `8889`
-- Frontend dev server (companion repo): `4200`
+- MySQL with MAMP default: `8889`
+- Frontend dev server: `4200`
 
 ## Configuration
 
@@ -109,17 +142,18 @@ Configuration lives in:
 src/main/resources/application.properties
 ```
 
-Supported environment-backed settings:
+Environment-backed settings:
 
-- `JWT_SECRET` for JWT signing
-- `DB_URL` for MySQL JDBC URL
-- `DB_USERNAME` for database username
-- `DB_PASSWORD` for database password
-- `UPLOAD_DIR` for uploaded media storage
-- `CORS_ALLOWED_ORIGINS` for allowed frontend origins
-- `STRIPE_SECRET_KEY` for Stripe server-side calls
-- `STRIPE_PUBLISHABLE_KEY` returned to the frontend
-- `STRIPE_WEBHOOK_SECRET` for webhook verification
+- `JWT_SECRET`
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `UPLOAD_DIR`
+- `CORS_ALLOWED_ORIGINS`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `SAMPLE_DATA_ENABLED`
 
 ## API Overview
 
@@ -130,7 +164,7 @@ Supported environment-backed settings:
 - `POST /auth/login`
 - `POST /auth/logout`
 
-### Users
+### Users And Profiles
 
 - `GET /api/users/getUser`
 - `GET /api/users/search?keyword=...`
@@ -144,10 +178,9 @@ Supported environment-backed settings:
 - `GET /api/posts/getMediaForPost?postId=...`
 - `PUT /api/posts/updatePost?id=...`
 - `DELETE /api/posts/deletePost/{postId}`
-- `DELETE /api/posts/deletePost?id=...`
 - `GET /uploads/{fileName}`
 
-### Likes And Comments
+### Likes, Comments, And Follows
 
 - `POST /api/likes/createLike?postId=...`
 - `DELETE /api/likes/deleteLike?likeId=...`
@@ -155,19 +188,34 @@ Supported environment-backed settings:
 - `GET /api/comments/getCommentsByPostId?postId=...`
 - `PUT /api/comments/updateComment`
 - `DELETE /api/comments/deleteComment?commentId=...`
-
-### Follows
-
 - `POST /api/follow/follow?userId=...`
 - `GET /api/follow/getFollowers`
 - `GET /api/follow/getFollowing`
 - `DELETE /api/follow/unfollow?userId=...`
 
+### Opportunities And Applications
+
+Exact controller paths should be checked before wiring new frontend calls, but this backend includes services/controllers for:
+
+- creating, editing, listing, and deleting opportunities
+- filtering opportunities by status/category/organization
+- applying to opportunities
+- cancelling volunteer applications
+- accepting/rejecting applicants from organization dashboards
+- dashboard summaries for volunteers and organizations
+
+### Notifications
+
+- paginated notification list for the current user
+- unread count for navbar/bell badges
+- mark one notification as read
+- mark all notifications as read
+
 ### Messages
 
 - `GET /api/messages/conversations`
-- `GET /api/messages/conversation/{userId}` (also marks the partner's pending messages as read)
-- `PUT /api/messages/conversation/{userId}/read` (marks pending messages as read without reloading history)
+- `GET /api/messages/conversation/{userId}`
+- `PUT /api/messages/conversation/{userId}/read`
 - WebSocket endpoint: `/ws`
 - STOMP send destination: `/app/chat.send`
 - STOMP user receive destination: `/user/queue/messages`
@@ -181,28 +229,40 @@ Supported environment-backed settings:
 - `GET /api/donations/my-donations`
 - `GET /api/donations/config`
 
+### Admin
+
+Admin endpoints support platform operations such as:
+
+- reviewing organization verification
+- managing users
+- managing opportunities
+- moderation/admin dashboard data
+
+Check controller files for exact paths before adding or changing frontend calls.
+
 ## Security Notes
 
 - `/auth/**`, `/uploads/**`, `/ws/**`, `/api/donations/webhook`, and `/api/donations/config` are publicly reachable.
-- Most `/api/**` endpoints require authenticated `VOLUNTEER` or `ORGANIZATION` authority.
+- Most `/api/**` endpoints require authentication.
+- Role-specific actions should remain protected server-side, not only in the frontend.
 - CORS is controlled through `CORS_ALLOWED_ORIGINS`.
 - Do not commit real JWT secrets, database passwords, or Stripe live keys.
 
 ## Testing
 
-Run the test suite:
-
 ```bash
 ./mvnw test
+./mvnw -DskipTests compile
 ```
 
-Current tests are minimal, so important flows should be manually verified while more automated coverage is added.
+Current automated tests are limited. Important flows should be manually verified while backend integration tests are added.
 
-## Suggested Next Improvements
+## Best Next Work
 
-- Add validation annotations to request DTOs and use `@Valid` in controllers.
-- Add integration tests for auth, posts, messages, and donations.
-- Add pagination for feeds, comments, conversations, notifications, users, and donation lists.
+- Finish admin/moderation flows end to end.
+- Add report entities/endpoints for posts, comments, users, organizations, opportunities, and messages.
+- Add validation annotations and `@Valid` to request DTO/controller methods.
+- Add integration tests for auth, opportunities, applications, notifications, messages, and donations.
+- Add pagination consistently for feeds, comments, conversations, users, opportunities, notifications, and donation lists.
 - Replace direct entity responses with DTOs consistently.
-- Add role-specific authorization checks for organization-only and volunteer-only actions.
-- Add production profile configuration and deployment documentation.
+- Add a dedicated test profile using H2 or Testcontainers so `./mvnw test` works without local MySQL.
