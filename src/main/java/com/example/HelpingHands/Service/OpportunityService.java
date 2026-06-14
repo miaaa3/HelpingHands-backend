@@ -28,4 +28,10 @@ public interface OpportunityService {
 
     /** Open/full/closed opportunities from organizations the given user follows, for feed cards. */
     List<OpportunityResponse> getOpportunitiesForFollowed(Long userId);
+
+    /** All opportunities platform-wide, including drafts, newest first - for admin moderation. */
+    List<OpportunityResponse> getAllOpportunitiesForAdmin();
+
+    /** Deletes any opportunity regardless of ownership - for admin moderation. */
+    void adminDeleteOpportunity(Long opportunityId);
 }

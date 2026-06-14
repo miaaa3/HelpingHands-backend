@@ -96,6 +96,18 @@ public class OpportunityServiceImpl implements OpportunityService {
                 .map(OpportunityResponse::fromEntity).toList();
     }
 
+    @Override
+    public List<OpportunityResponse> getAllOpportunitiesForAdmin() {
+        return opportunityRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(OpportunityResponse::fromEntity).toList();
+    }
+
+    @Override
+    public void adminDeleteOpportunity(Long opportunityId) {
+        getOpportunityOrThrow(opportunityId);
+        opportunityRepository.deleteById(opportunityId);
+    }
+
     private Opportunity getOpportunityOrThrow(Long opportunityId) {
         return opportunityRepository.findById(opportunityId)
                 .orElseThrow(() -> new IllegalArgumentException("Opportunity with id " + opportunityId + " not found"));
