@@ -40,7 +40,7 @@ public class OpportunityApplication {
     private ApplicationStatus status = ApplicationStatus.PENDING;
 
     @CreatedDate
-    @Column(nullable = false)
+    @Column
     private LocalDateTime createdAt;
 
     public OpportunityApplication(Opportunity opportunity, Volunteer volunteer) {
