@@ -43,7 +43,7 @@ public class WebSecurityConfiguration {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/donations/webhook", "/api/donations/config").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/**").hasAnyAuthority("VOLUNTEER", "ORGANIZATION")
+                        .requestMatchers("/api/**").hasAnyAuthority("VOLUNTEER", "ORGANIZATION", "ADMIN")
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

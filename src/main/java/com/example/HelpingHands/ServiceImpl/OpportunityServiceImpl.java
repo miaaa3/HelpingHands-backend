@@ -5,6 +5,7 @@ import com.example.HelpingHands.Entity.Opportunity;
 import com.example.HelpingHands.Entity.OpportunityCategory;
 import com.example.HelpingHands.Entity.OpportunityStatus;
 import com.example.HelpingHands.Entity.Organization;
+import com.example.HelpingHands.Entity.OrganizationVerificationStatus;
 import com.example.HelpingHands.Entity.UserEntity;
 import com.example.HelpingHands.Repository.OpportunityRepository;
 import com.example.HelpingHands.Repository.OrganizationRepository;
@@ -29,6 +30,9 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Override
     public OpportunityResponse createOpportunity(Opportunity opportunity, String organizationEmail) {
         Organization organization = getOrganizationByEmail(organizationEmail);
+        if (organization.getVerificationStatus() != OrganizationVerificationStatus.VERIFIED) {
+            throw new IllegalStateException("Your organization must be verified by an admin before you can post opportunities.");
+        }
         opportunity.setOrganization(organization);
         if (opportunity.getStatus() == null) {
             opportunity.setStatus(OpportunityStatus.DRAFT);

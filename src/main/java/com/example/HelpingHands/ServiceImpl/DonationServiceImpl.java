@@ -6,6 +6,7 @@ import com.example.HelpingHands.DTO.DonationResponse;
 import com.example.HelpingHands.Entity.Donation;
 import com.example.HelpingHands.Entity.DonationStatus;
 import com.example.HelpingHands.Entity.Organization;
+import com.example.HelpingHands.Entity.OrganizationVerificationStatus;
 import com.example.HelpingHands.Entity.UserEntity;
 import com.example.HelpingHands.Repository.DonationRepository;
 import com.example.HelpingHands.Repository.OrganizationRepository;
@@ -47,6 +48,10 @@ public class DonationServiceImpl implements DonationService {
 
         Organization organization = organizationRepository.findById(request.getOrganizationId())
                 .orElseThrow(() -> new IllegalArgumentException("Organization not found"));
+
+        if (organization.getVerificationStatus() != OrganizationVerificationStatus.VERIFIED) {
+            throw new IllegalStateException("This organization is not yet verified and cannot receive donations.");
+        }
 
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ONE) < 0) {
             throw new IllegalStateException("Donation amount must be at least 1");
